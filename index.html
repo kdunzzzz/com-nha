@@ -22,26 +22,22 @@ main{max-width:1100px;margin:auto;padding:24px 18px 100px}.hero{display:flex;jus
 <div id="app">
 <header><div class="head"><div><div class="brand">CƠM NHÀ</div><div class="sub">Cơm phần • Cơm tự chọn • Món ăn mỗi ngày</div></div><div class="table">Bàn <span id="tableNo">05</span></div></div></header>
 <main>
+<section id="adminPanel" style="display:none"><section class="hero"><div><h1>Quầy — Quản lý đơn</h1><p>Đơn khách gửi sẽ xuất hiện ở đây theo thời gian thực.</p></div></section><div class="orders" id="orders"></div></section>
 <section class="hero"><div><h1>Hôm nay ăn gì?</h1><p>Quét QR tại bàn để gọi món. Đơn sẽ gửi thẳng tới quầy.</p></div></section>
 <div class="notice"><b>Bàn 05 đang gọi món</b><span>Không cần nhập lại số bàn. Khi gửi đơn, quán sẽ nhận đúng vị trí của bạn.</span></div>
 <div class="tabs" id="tabs"></div>
 <div class="grid" id="menu"></div>
-<section class="admin"><h2>Màn hình quầy — bản thử nghiệm</h2><p style="color:var(--muted)">Đây là phần quản lý đơn để quán xác nhận và chuyển trạng thái món.</p><div class="orders" id="orders"></div></section>
 </main>
 <div class="cart"><h3>Đơn của bạn</h3><div id="cartItems"><div class="empty">Chưa có món nào.</div></div><div class="total"><span>Tạm tính</span><span id="total">0đ</span></div><button class="checkout" onclick="sendOrder()">GỬI ĐƠN ĐẾN QUÁN</button></div>
 </div>
-
 <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-database-compat.js"></script>
-
 <script>
 const firebaseConfig={apiKey:"AIzaSyBdRSyaXMxVldEwPwkW0w2otSANP3uzPyM",authDomain:"com-nha-ba1b0.firebaseapp.com",databaseURL:"https://com-nha-ba1b0-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"com-nha-ba1b0",storageBucket:"com-nha-ba1b0.firebasestorage.app",messagingSenderId:"89256009153",appId:"1:89256009153:web:bd482bf4600c3b12dee340",measurementId:"G-MWS7K6M9FT"};
-
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 firebase.auth().signInAnonymously().catch(e=>console.error(e));
-
 const products=[
 {id:1,name:'Cơm sườn nướng',cat:'Cơm phần',price:45000,desc:'Sườn nướng, cơm nóng và rau/canh trong ngày',emoji:'🍖'},
 {id:2,name:'Cơm cá sốt cà',cat:'Cơm phần',price:40000,desc:'Cá sốt cà chua, cơm nóng và món kèm',emoji:'🐟'},
@@ -53,127 +49,19 @@ const products=[
 {id:8,name:'Mắm ruốc',cat:'Món gọi thêm',price:10000,desc:'Món ăn kèm đặc trưng',emoji:'🥣'},
 {id:9,name:'Canh trong ngày',cat:'Món gọi thêm',price:10000,desc:'Canh thay đổi theo ngày',emoji:'🍲'},
 {id:10,name:'Rau xào',cat:'Món gọi thêm',price:15000,desc:'Rau theo nguyên liệu trong ngày',emoji:'🥬'}];
-
-let cart={}, orders=[];
-const cats=['Tất cả','Cơm phần','Món gọi thêm'];
-let active='Tất cả';
-
+let cart={}, orders=[]; const cats=['Tất cả','Cơm phần','Món gọi thêm']; let active='Tất cả';
 function money(n){return n.toLocaleString('vi-VN')+'đ'}
-
-function renderTabs(){
-document.getElementById('tabs').innerHTML=cats.map(c=>`<button class="${c===active?'active':''}" onclick="setCat('${c}')">${c}</button>`).join('')
-}
-
-function setCat(c){
-active=c;
-renderTabs();
-renderMenu()
-}
-
-function renderMenu(){
-let list=active==='Tất cả'?products:products.filter(p=>p.cat===active);
-document.getElementById('menu').innerHTML=list.map(p=>`<article class="card"><div class="photo">${p.emoji}</div><div class="body"><h3>${p.name}</h3><div class="desc">${p.desc}</div><div class="price">${money(p.price)}</div><button class="add" onclick="add(${p.id})">+ Thêm món</button></div></article>`).join('')
-}
-
-function add(id){
-cart[id]=(cart[id]||0)+1;
-renderCart()
-}
-
-function change(id,d){
-cart[id]=(cart[id]||0)+d;
-if(cart[id]<=0)delete cart[id];
-renderCart()
-}
-
-function renderCart(){
-let keys=Object.keys(cart);
-if(!keys.length){
-document.getElementById('cartItems').innerHTML='<div class="empty">Chưa có món nào.</div>';
-document.getElementById('total').textContent='0đ';
-return
-}
-
-let total=0;
-document.getElementById('cartItems').innerHTML=keys.map(k=>{
-let p=products.find(x=>x.id==k),q=cart[k];
-total+=p.price*q;
-return `<div class="cart-row"><span>${p.name}<br><small>${money(p.price)} × ${q}</small></span><span class="qty"><button onclick="change(${p.id},-1)">−</button> <b>${q}</b> <button onclick="change(${p.id},1)">+</button></span></div>`
-}).join('');
-
-document.getElementById('total').textContent=money(total)
-}
-
-async function sendOrder(){
-let keys=Object.keys(cart);
-
-if(!keys.length){
-alert('Ổi thử thêm món trước nha.');
-return
-}
-
-if(!firebase.auth().currentUser){
-alert('Đang kết nối với quán, thử lại sau một chút nha.');
-return
-}
-
-let items=keys.map(k=>{
-let p=products.find(x=>x.id==k);
-return {name:p.name,qty:cart[k],price:p.price}
-});
-
-let total=items.reduce((s,x)=>s+x.price*x.qty,0);
-
-try{
-await db.ref('orders').push({
-table:document.getElementById('tableNo').textContent,
-items:items,
-total:total,
-status:'Mới',
-customerUid:firebase.auth().currentUser.uid,
-createdAt:firebase.database.ServerValue.TIMESTAMP
-});
-
-cart={};
-renderCart();
-alert('Đã gửi đơn Bàn '+document.getElementById('tableNo').textContent+' đến quầy.')
-}catch(e){
-console.error(e);
-alert('Chưa gửi được đơn. Kiểm tra kết nối Firebase nha.')
-}
-}
-
-function nextStatus(i){
-let seq=['Mới','Đang làm','Hoàn thành'];
-let o=orders[i];
-let n=seq[Math.min(seq.indexOf(o.status)+1,2)];
-o.status=n;
-renderOrders()
-}
-
-function renderOrders(){
-let el=document.getElementById('orders');
-
-if(!orders.length){
-el.innerHTML='<div class="empty">Chưa có đơn. Khi khách gửi đơn, đơn sẽ hiện ở đây.</div>';
-return
-}
-
-el.innerHTML=orders.map((o,i)=>`<article class="order"><div class="status">${o.status}</div><b>Bàn ${o.table}</b><ul>${o.items.map(x=>`<li>${x.name} × ${x.qty}</li>`).join('')}</ul><b>${money(o.total)}</b><br><button style="margin-top:10px" onclick="nextStatus(${i})">${o.status==='Mới'?'Nhận đơn':o.status==='Đang làm'?'Đánh dấu hoàn thành':'Đã xong'}</button></article>`).join('')
-}
-
-db.ref('orders').on('value',snap=>{
-orders=[];
-snap.forEach(child=>{
-orders.unshift({id:child.key,...child.val()})
-});
-renderOrders()
-});
-
-renderTabs();
-renderMenu();
-renderCart();
-renderOrders();
+function renderTabs(){document.getElementById('tabs').innerHTML=cats.map(c=>`<button class="${c===active?'active':''}" onclick="setCat('${c}')">${c}</button>`).join('')}
+function setCat(c){active=c;renderTabs();renderMenu()}
+function renderMenu(){let list=active==='Tất cả'?products:products.filter(p=>p.cat===active);document.getElementById('menu').innerHTML=list.map(p=>`<article class="card"><div class="photo">${p.emoji}</div><div class="body"><h3>${p.name}</h3><div class="desc">${p.desc}</div><div class="price">${money(p.price)}</div><button class="add" onclick="add(${p.id})">+ Thêm món</button></div></article>`).join('')}
+function add(id){cart[id]=(cart[id]||0)+1;renderCart()}
+function change(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];renderCart()}
+function renderCart(){let keys=Object.keys(cart);if(!keys.length){document.getElementById('cartItems').innerHTML='<div class="empty">Chưa có món nào.</div>';document.getElementById('total').textContent='0đ';return}let total=0;document.getElementById('cartItems').innerHTML=keys.map(k=>{let p=products.find(x=>x.id==k),q=cart[k];total+=p.price*q;return `<div class="cart-row"><span>${p.name}<br><small>${money(p.price)} × ${q}</small></span><span class="qty"><button onclick="change(${p.id},-1)">−</button> <b>${q}</b> <button onclick="change(${p.id},1)">+</button></span></div>`}).join('');document.getElementById('total').textContent=money(total)}
+  async function sendOrder(){let keys=Object.keys(cart);if(!keys.length){alert('Ổi thử thêm món trước nha.');return}if(!firebase.auth().currentUser){alert('Đang kết nối với quán, thử lại sau một chút nha.');return}let items=keys.map(k=>{let p=products.find(x=>x.id==k);return {name:p.name,qty:cart[k],price:p.price}});let total=items.reduce((s,x)=>s+x.price*x.qty,0);try{await db.ref('orders').push({table:document.getElementById('tableNo').textContent,items:items,total:total,status:'Mới',customerUid:firebase.auth().currentUser.uid,createdAt:firebase.database.ServerValue.TIMESTAMP});cart={};renderCart();alert('Đã gửi đơn Bàn '+document.getElementById('tableNo').textContent+' đến quầy.')}catch(e){console.error(e);alert('Chưa gửi được đơn. Kiểm tra kết nối Firebase nha.')}} 
+renderTabs();renderMenu();renderCart();
+async function nextStatus(id,status){try{await db.ref('orders/'+id).update({status:status})}catch(e){alert('Chưa cập nhật được trạng thái.')}}
+function renderOrders(){let el=document.getElementById('orders');if(!orders.length){el.innerHTML='<div class="empty">Chưa có đơn nào.</div>';return}el.innerHTML=orders.map(o=>{let next=o.status==='Mới'?'Đang làm':o.status==='Đang làm'?'Hoàn thành':null;let items=o.items.map(x=>'<li>'+x.name+' × '+x.qty+'</li>').join('');let button=next?'<br><button style="margin-top:10px" onclick="nextStatus(\''+o.id+'\',\''+next+'\')">'+(next==='Đang làm'?'Nhận đơn':'Đánh dấu hoàn thành')+'</button>':'';return '<article class="order"><div class="status">'+o.status+'</div><b>Bàn '+o.table+'</b><ul>'+items+'</ul><b>'+money(o.total)+'</b>'+button+'</article>'}).join('')}
+const isAdmin=new URLSearchParams(location.search).get('admin')==='1';
+if(isAdmin){document.querySelector('.table').textContent='QUẦY';document.getElementById('adminPanel').style.display='block';document.querySelectorAll('main>section:not(#adminPanel)').forEach(x=>x.style.display='none');document.querySelector('.cart').style.display='none';db.ref('orders').on('value',snap=>{orders=[];snap.forEach(child=>orders.unshift({id:child.key,...child.val()}));renderOrders()})}else{renderTabs();renderMenu();renderCart()}
 </script>
-</body>
-</html>
+</body></html>
