@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cơm Nhà – Gọi món</title>
+<style>
+:root{color-scheme:light dark;--bg:#f3eadb;--surface:#fffaf2;--surface2:#efe2ce;--ink:#211d18;--muted:#71685d;--line:#d9cbb7;--accent:#171512;--wood:#8b5e3c;--ok:#2f6b45;}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+#app{min-height:100vh;background:var(--bg);}
+header{position:sticky;top:0;z-index:5;background:var(--accent);color:#fff;padding:18px 22px;box-shadow:0 3px 16px #0002}.head{max-width:1100px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:15px}.brand{font-weight:900;letter-spacing:.5px;font-size:24px}.sub{font-size:12px;opacity:.75}.table{background:#fff;color:#111;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px}
+main{max-width:1100px;margin:auto;padding:24px 18px 100px}.hero{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:22px}.hero h1{margin:0 0 6px;font-size:34px}.hero p{margin:0;color:var(--muted)}.tabs{display:flex;gap:8px;overflow:auto;padding-bottom:12px}.tabs button{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 15px;border-radius:999px;font-weight:700;white-space:nowrap;cursor:pointer}.tabs button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 5px 18px #4a352010}.photo{height:125px;background:linear-gradient(135deg,#b97845,#ead5ad);display:grid;place-items:center;font-size:48px}.body{padding:15px}.body h3{margin:0 0 6px}.desc{font-size:13px;color:var(--muted);min-height:38px}.price{font-size:17px;font-weight:900;margin:12px 0}.add{width:100%;border:0;background:var(--accent);color:#fff;padding:11px;border-radius:10px;font-weight:800;cursor:pointer}.add:active{transform:scale(.98)}
+.cart{position:fixed;right:18px;bottom:18px;width:min(410px,calc(100vw - 36px));background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 14px 45px #0003;padding:17px;z-index:10}.cart h3{margin:0 0 10px}.cart-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.qty button{border:1px solid var(--line);background:var(--surface2);border-radius:6px;padding:2px 7px;cursor:pointer}.total{display:flex;justify-content:space-between;font-weight:900;font-size:18px;padding:12px 0}.checkout{width:100%;padding:13px;border:0;border-radius:11px;background:var(--ok);color:#fff;font-weight:900;cursor:pointer}.empty{color:var(--muted);font-size:14px}
+.notice{background:var(--surface2);border:1px dashed var(--line);padding:13px 15px;border-radius:14px;margin:0 0 18px}.notice b{display:block;margin-bottom:3px}.admin{margin-top:60px;border-top:2px solid var(--line);padding-top:30px}.admin h2{margin-bottom:8px}.orders{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.order{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}.status{display:inline-block;padding:5px 8px;border-radius:999px;background:var(--surface2);font-size:12px;font-weight:800;margin-bottom:8px}.order button{border:0;background:var(--accent);color:#fff;border-radius:8px;padding:8px 10px;font-weight:700;cursor:pointer}.order ul{padding-left:20px;margin:8px 0 12px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.orders{grid-template-columns:1fr}.hero{align-items:start;flex-direction:column}.cart{position:sticky;bottom:10px;margin:15px auto;display:block}.admin{margin-top:25px}}
+@media(max-width:520px){main{padding:18px 12px 20px}.grid{grid-template-columns:1fr}.hero h1{font-size:28px}}
+@media(prefers-color-scheme:dark){:root{--bg:#171511;--surface:#211e19;--surface2:#2b261f;--ink:#f4eee4;--muted:#bcb1a2;--line:#4b4338;--accent:#080807;--wood:#a97850}}
+</style>
+</head>
+<body>
+<div id="app">
+<header><div class="head"><div><div class="brand">CƠM NHÀ</div><div class="sub">Cơm phần • Cơm tự chọn • Món ăn mỗi ngày</div></div><div class="table">Bàn <span id="tableNo">05</span></div></div></header>
+<main>
+<section class="hero"><div><h1>Hôm nay ăn gì?</h1><p>Quét QR tại bàn để gọi món. Đơn sẽ gửi thẳng tới quầy.</p></div></section>
+<div class="notice"><b>Bàn 05 đang gọi món</b><span>Không cần nhập lại số bàn. Khi gửi đơn, quán sẽ nhận đúng vị trí của bạn.</span></div>
+<div class="tabs" id="tabs"></div>
+<div class="grid" id="menu"></div>
+<section class="admin"><h2>Màn hình quầy — bản thử nghiệm</h2><p style="color:var(--muted)">Đây là phần quản lý đơn để quán xác nhận và chuyển trạng thái món.</p><div class="orders" id="orders"></div></section>
+</main>
+<div class="cart"><h3>Đơn của bạn</h3><div id="cartItems"><div class="empty">Chưa có món nào.</div></div><div class="total"><span>Tạm tính</span><span id="total">0đ</span></div><button class="checkout" onclick="sendOrder()">GỬI ĐƠN ĐẾN QUÁN</button></div>
+</div>
+<script>
+const products=[
+{id:1,name:'Cơm sườn nướng',cat:'Cơm phần',price:45000,desc:'Sườn nướng, cơm nóng và rau/canh trong ngày',emoji:'🍖'},
+{id:2,name:'Cơm cá sốt cà',cat:'Cơm phần',price:40000,desc:'Cá sốt cà chua, cơm nóng và món kèm',emoji:'🐟'},
+{id:3,name:'Cơm thịt kho tàu',cat:'Cơm phần',price:40000,desc:'Thịt kho tàu đậm vị, cơm nóng và rau/canh',emoji:'🍲'},
+{id:4,name:'Sườn nướng',cat:'Món gọi thêm',price:30000,desc:'Phần sườn nướng gọi thêm',emoji:'🍖'},
+{id:5,name:'Cá sốt cà',cat:'Món gọi thêm',price:28000,desc:'Cá sốt cà chua nhà làm',emoji:'🐟'},
+{id:6,name:'Thịt kho tàu',cat:'Món gọi thêm',price:28000,desc:'Thịt kho tàu',emoji:'🥩'},
+{id:7,name:'Đậu hũ',cat:'Món gọi thêm',price:15000,desc:'Đậu hũ nóng, món quen của quán',emoji:'▦'},
+{id:8,name:'Mắm ruốc',cat:'Món gọi thêm',price:10000,desc:'Món ăn kèm đặc trưng',emoji:'🥣'},
+{id:9,name:'Canh trong ngày',cat:'Món gọi thêm',price:10000,desc:'Canh thay đổi theo ngày',emoji:'🍲'},
+{id:10,name:'Rau xào',cat:'Món gọi thêm',price:15000,desc:'Rau theo nguyên liệu trong ngày',emoji:'🥬'}];
+let cart={}, orders=[]; const cats=['Tất cả','Cơm phần','Món gọi thêm']; let active='Tất cả';
+function money(n){return n.toLocaleString('vi-VN')+'đ'}
+function renderTabs(){document.getElementById('tabs').innerHTML=cats.map(c=>`<button class="${c===active?'active':''}" onclick="setCat('${c}')">${c}</button>`).join('')}
+function setCat(c){active=c;renderTabs();renderMenu()}
+function renderMenu(){let list=active==='Tất cả'?products:products.filter(p=>p.cat===active);document.getElementById('menu').innerHTML=list.map(p=>`<article class="card"><div class="photo">${p.emoji}</div><div class="body"><h3>${p.name}</h3><div class="desc">${p.desc}</div><div class="price">${money(p.price)}</div><button class="add" onclick="add(${p.id})">+ Thêm món</button></div></article>`).join('')}
+function add(id){cart[id]=(cart[id]||0)+1;renderCart()}
+function change(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];renderCart()}
+function renderCart(){let keys=Object.keys(cart);if(!keys.length){document.getElementById('cartItems').innerHTML='<div class="empty">Chưa có món nào.</div>';document.getElementById('total').textContent='0đ';return}let total=0;document.getElementById('cartItems').innerHTML=keys.map(k=>{let p=products.find(x=>x.id==k),q=cart[k];total+=p.price*q;return `<div class="cart-row"><span>${p.name}<br><small>${money(p.price)} × ${q}</small></span><span class="qty"><button onclick="change(${p.id},-1)">−</button> <b>${q}</b> <button onclick="change(${p.id},1)">+</button></span></div>`}).join('');document.getElementById('total').textContent=money(total)}
+function sendOrder(){let keys=Object.keys(cart);if(!keys.length){alert('Ổi thử thêm món trước nha.');return}let items=keys.map(k=>{let p=products.find(x=>x.id==k);return {name:p.name,qty:cart[k],price:p.price}});let total=items.reduce((s,x)=>s+x.price*x.qty,0);orders.unshift({id:Date.now(),table:document.getElementById('tableNo').textContent,items,total,status:'Mới'});cart={};renderCart();renderOrders();alert('Đã gửi đơn Bàn '+document.getElementById('tableNo').textContent+' đến quầy.')} 
+function nextStatus(i){let seq=['Mới','Đang làm','Hoàn thành'];let o=orders[i],n=seq[Math.min(seq.indexOf(o.status)+1,2)];o.status=n;renderOrders()}
+function renderOrders(){let el=document.getElementById('orders');if(!orders.length){el.innerHTML='<div class="empty">Chưa có đơn. Khi khách gửi đơn, đơn sẽ hiện ở đây.</div>';return}el.innerHTML=orders.map((o,i)=>`<article class="order"><div class="status">${o.status}</div><b>Bàn ${o.table}</b><ul>${o.items.map(x=>`<li>${x.name} × ${x.qty}</li>`).join('')}</ul><b>${money(o.total)}</b><br><button style="margin-top:10px" onclick="nextStatus(${i})">${o.status==='Mới'?'Nhận đơn':o.status==='Đang làm'?'Đánh dấu hoàn thành':'Đã xong'}</button></article>`).join('')}
+renderTabs();renderMenu();renderCart();renderOrders();
+</script>
+</body></html>
